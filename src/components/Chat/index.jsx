@@ -12,6 +12,11 @@ const styles = {
 
 };
 
+const NEO = 'c56f33fc6ecfcd0c225c4ab356fee59390af8560be0e930faebe74a6daff7c9b';
+const GAS = "602c79718b16e442de58778e148d0b1084e3b2dffd5de6b7b16cee7969282de7";
+
+
+
 
 
 class Chat extends React.Component {
@@ -24,12 +29,17 @@ class Chat extends React.Component {
             contacts: [],
             owner: '',
             sendAddress: '',
-            sendAmount: ''
+            sendAmount: '',
+            recipients: [],
+            balance: ''
+
           };
         this.sendNeo =  this.sendNeo.bind(this);
         this.selectContact = this.selectContact.bind(this);
         this.loadContacts = this.loadContacts.bind(this);
         this.loadBalance = this.loadBalance.bind(this);
+        this.isRecipient = this.isRecipient.bind(this);
+        this.prepareSend = this.prepareSend.bind(this);
 
     } 
 
@@ -39,18 +49,32 @@ class Chat extends React.Component {
     };
 
     loadBalance = async () => {
+        
 
-        console.log('#');
+        this.setState( {'balance' :await this.props.nos.getBalance({ asset: NEO})  });
+
+        console.log('Balance : ' + this.state.balance);
+
+
+    } 
+
+    prepareSend (amount) {
+
+        if(this.state.balance < amount) {
+            alert("Not enough balance!");
+            return;
+        }
+
+        this.state.recipients.forEach(function(contact,index) { 
+           // console.log(this.state.owner + 'Owner'); 
+            this.sendNeo(contact.address, amount);
+         },this)
 
     }
 
     
 
     sendNeo = async ( recipient, amount ) => {
-
-        const NEO = 'c56f33fc6ecfcd0c225c4ab356fee59390af8560be0e930faebe74a6daff7c9b';
-
-        const GAS = "602c79718b16e442de58778e148d0b1084e3b2dffd5de6b7b16cee7969282de7";
 
         const send = {  asset: NEO, receiver: recipient, amount };
 
@@ -64,8 +88,18 @@ class Chat extends React.Component {
     selectContact (contact ) {
 
         console.log(contact);
-        this.setState({'sendAddress': contact.address, 'sendAmount': contact.amount});
+        let recipients = this.state.recipients;
+
+        if(this.state.recipients.indexOf(contact) === -1) {
+            recipients.push(contact);
+        }else {
+            recipients.splice( recipients.indexOf(contact), 1 );
+
+        }
+
+        this.setState({ 'recipients': recipients , 'sendAddress': contact.address, 'sendAmount': contact.amount});
         
+        console.log(recipients);
     }
 
     loadContacts() {
@@ -91,10 +125,20 @@ class Chat extends React.Component {
         
     }
 
+    isRecipient (contact) {
+
+        if(this.state.recipients.indexOf(contact) === -1)
+            return false;
+        else 
+            return true;
+
+    }
+
   
     componentDidMount() {
 
         this.setOwnerAddress();
+        this.loadBalance();
       
     }
     
@@ -102,21 +146,31 @@ class Chat extends React.Component {
     render() {
         return (
             <div className="app">
-              <Title />
+              <Title owner={this.state.owner}/>
               <br /> &nbsp;
 
               # Add Contact #  
-              <br /> &nbsp;
+              <br /> <br /> &nbsp; 
               <ContactCreateForm owner={this.state.owner}  loadContacts={this.loadContacts} />
-              <br/>
+              <br/> <br/>
               # Send Neo #
-              <br /> {this.state.contacts.length?'Select a contact and fill the amount of neo to send':'Add contacts to use the send functionality'}
+              <br /> <br/> {this.state.contacts.length?'Select contact(s) and fill the amount of neo to send':'Add contacts to use the send functionality'}
+              <br /> <br />Recipents Count : {this.state.recipients.length}
               <br /> &nbsp;
+              <RecipientList recipients={this.state.recipients}/>
+              <br /> &nbsp;
+
               <SendNeoForm address={this.state.sendAddress} 
                                        amount={this.state.sendAmount}
-                                       sendNeo={this.sendNeo} />
+                                       sendNeo={this.sendNeo}
+                                       prepareSend={this.prepareSend} />
+                                                     <br /> &nbsp;
+
                 <ContactList 
-                  contacts={this.state.contacts} selectContact={this.selectContact} /> 
+                  contacts={this.state.contacts} 
+                  selectContact={this.selectContact} 
+                  isRecipient= {this.isRecipient}
+                   /> 
 
                   {/*
               <SendMessageForm
@@ -138,7 +192,7 @@ class ContactList extends React.Component {
                       <li  key={contact._id} className="message">
                         <div>{contact.address}</div>
                         <div>{contact.name} &nbsp;
-                        <button onClick={()=>this.props.selectContact(contact)}> Select</button>
+                        <button onClick={()=>this.props.selectContact(contact)}> {this.props.isRecipient(contact)?'Unselect':'Select'}</button>
 
                         </div>
                       </li>
@@ -148,6 +202,23 @@ class ContactList extends React.Component {
         )
     }
 }
+class RecipientList extends React.Component {
+    render() {
+        return (
+            <div>
+            
+                {this.props.recipients.map((contact, index) => {
+                    return ( 
+                        
+                        <span className="recipient">{contact.name} &nbsp;</span>
+                    )
+                })}
+
+            </div>
+        )
+    }
+}
+
 
 class ContactCreateForm extends React.Component {
     constructor() {
@@ -259,7 +330,9 @@ class SendNeoForm extends React.Component {
 
         let data = new FormData(e.target);
 
-        this.props.sendNeo(data.get('recipient'), data.get('amount'));
+        this.props.prepareSend(data.get('amount'));
+
+       // this.props.sendNeo(data.get('recipient'), data.get('amount'));
         
     }
 
@@ -273,13 +346,13 @@ class SendNeoForm extends React.Component {
             className="">
            
              {this.props.sendAddress}
-              <input
+              {/* <input
                 name = "recipient"
                 id="recipient"
                 onChange={this.handleChange}
                 value={this.props.address}
                 placeholder="Neo address"
-                type="text" required/>
+                type="text" required/> */}
 
               <input
                 name = "amount"
@@ -301,9 +374,15 @@ class SendNeoForm extends React.Component {
 
 }
 
-function Title() {
-  return <p className="title">Contact Pay</p>
+class Title extends React.Component {
+    render() {
+        return (
+            <p className="title">Contact Pay : {this.props.owner} </p>
+
+        )
+    }        
 }
+
 
 Chat.propTypes = {
     classes: PropTypes.objectOf(PropTypes.any).isRequired,
