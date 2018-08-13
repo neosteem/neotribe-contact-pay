@@ -5,6 +5,9 @@ import Chatkit from "@pusher/chatkit";
 
 import { react } from "@nosplatform/api-functions";
 
+import { Button, Container, Label, Icon, Segment, Divider, Header, Statistic, Menu, Image } from 'semantic-ui-react'
+
+
 const { injectNOS, nosProps } = react.default;
 
 
@@ -14,8 +17,6 @@ const styles = {
 
 const NEO = 'c56f33fc6ecfcd0c225c4ab356fee59390af8560be0e930faebe74a6daff7c9b';
 const GAS = "602c79718b16e442de58778e148d0b1084e3b2dffd5de6b7b16cee7969282de7";
-
-
 
 
 
@@ -145,17 +146,36 @@ class Chat extends React.Component {
     
     render() {
         return (
+
+
+            <Segment>
+
+
             <div className="app">
               <Title owner={this.state.owner}/>
-              <br /> &nbsp;
+              <br /> <br /> &nbsp;
 
-              # Add Contact #  
+              <Header as='h3' textAlign='center'>
+              <Icon name='user' />
+              Add Contact 
+              </Header>
               <br /> <br /> &nbsp; 
               <ContactCreateForm owner={this.state.owner}  loadContacts={this.loadContacts} />
+              <Divider section />
               <br/> <br/>
-              # Send Neo #
+              <Header as='h3' textAlign='center'>
+              <Icon name='paper plane' />
+              Send Neo
+              </Header>
               <br /> <br/> {this.state.contacts.length?'Select contact(s) and fill the amount of neo to send':'Add contacts to use the send functionality'}
-              <br /> <br />Recipents Count : {this.state.recipients.length}
+              <br /> <br />
+              <Statistic size='mini'>
+                <Statistic.Value>
+                    <Icon name='user outline' />
+                    {this.state.recipients.length}
+                </Statistic.Value>
+              <Statistic.Label>Recipients</Statistic.Label>
+                </Statistic>
               <br /> &nbsp;
               <RecipientList recipients={this.state.recipients}/>
               <br /> &nbsp;
@@ -176,6 +196,8 @@ class Chat extends React.Component {
               <SendMessageForm
                   sendMessage={this.sendMessage} /> */}
             </div>
+
+            </Segment>
         );
     }
 
@@ -192,7 +214,7 @@ class ContactList extends React.Component {
                       <li  key={contact._id} className="message">
                         <div>{contact.address}</div>
                         <div>{contact.name} &nbsp;
-                        <button onClick={()=>this.props.selectContact(contact)}> {this.props.isRecipient(contact)?'Unselect':'Select'}</button>
+                        <button  onClick={()=>this.props.selectContact(contact)}> {this.props.isRecipient(contact)?'Unselect':'Select'}</button>
 
                         </div>
                       </li>
@@ -209,8 +231,12 @@ class RecipientList extends React.Component {
             
                 {this.props.recipients.map((contact, index) => {
                     return ( 
+
+                        <Label>
+                            <Icon name='user' /> {contact.name}
+                        </Label>
+                    
                         
-                        <span className="recipient">{contact.name} &nbsp;</span>
                     )
                 })}
 
@@ -284,6 +310,7 @@ class ContactCreateForm extends React.Component {
             <form
                 onSubmit={this.handleSubmit}
                 className="">
+                <div class='ui input'>
                 <input
                     
                     name= "name"
@@ -292,6 +319,8 @@ class ContactCreateForm extends React.Component {
                     value={this.state.contact}
                     placeholder="Name"
                     type="text" required/>
+                </div> &nbsp;
+                <div class='ui input'>    
                 <input
                     name = "address"
                     id="address"
@@ -300,7 +329,8 @@ class ContactCreateForm extends React.Component {
                     placeholder="Neo address"
                     type="text" required/>
 
-                    &nbsp;<button> Add Contact</button>
+                    &nbsp;&nbsp;<button class='ui button'> Add Contact</button>
+                </div>    
             </form>
         )
     }
@@ -353,6 +383,8 @@ class SendNeoForm extends React.Component {
                 value={this.props.address}
                 placeholder="Neo address"
                 type="text" required/> */}
+             
+             <div class='ui input'>    
 
               <input
                 name = "amount"
@@ -361,9 +393,10 @@ class SendNeoForm extends React.Component {
                 value={this.props.amount}
                 placeholder="Amt.of Neo"
                 type="text" required/>    
+             </div>   
 
                 
-                &nbsp; <button> Send</button>
+                &nbsp; <button class='ui button primary'> Send</button>
         </form>
 
                         
@@ -377,11 +410,21 @@ class SendNeoForm extends React.Component {
 class Title extends React.Component {
     render() {
         return (
-            <p className="title">Contact Pay : {this.props.owner} </p>
+
+            <Menu fixed='top' inverted>
+            <Container>
+              <Menu.Item as='a' header>
+                <Image size='mini' src='logo.png'  style={{ marginRight: '1.5em' }} />
+                Contact Pay
+              </Menu.Item>
+              <Menu.Item as='a'>{this.props.owner}</Menu.Item>        
+            </Container>
+          </Menu>
 
         )
     }        
 }
+
 
 
 Chat.propTypes = {

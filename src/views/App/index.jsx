@@ -29,13 +29,8 @@ const styles = {
 
 const App = ({ classes }) => (
   <div className={classes.App}>
-    <Header title="Contact Pay: Neo" />
-    {/* <p className={classes.intro}>
-      ...To get started, edit <code>src/views/App/index.js</code> and save to reload.
-    </p>
-    <p className={classes.intro}>Or test out the following demo functions!</p>
-    <hr className={classes.lineBreak} />
-    <NOSActions /> */}
+    {/* <Header title="Contact Pay: Neo" /> */}
+ 
     {/* <NOSActions /> */}
      <Chat /> 
   
